@@ -99,6 +99,12 @@ var cherry = $c = {
             options: options,
             line: function (to, options) {
                 return cherry.line(this.from, to, options !== 'undefined' ? options : this.options);
+            },
+            remove: function(){
+                return true;
+            },
+            grad: function(){
+                return cherry.grad();
             }
         };
     },
@@ -106,6 +112,12 @@ var cherry = $c = {
     color: function (color) {
         this.canvas.fillStyle = color;
     },
+    grad: function(){
+        var grad = this.canvas.createLinearGradient(123,123,1,190);
+        grad.addColor(0.4, 'blue');
+        return grad;
+    },
+    
     /**************************************************************************
      ********************SERVICE ERROR***************************************** 
      **************************************************************************/
