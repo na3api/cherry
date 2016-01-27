@@ -22,6 +22,8 @@ $.serviceOptions = {
 }
 var cherry = $c = {
     canvas: false,
+    frame_count: 0,
+    lastTime: false,
     init: function (selector, options, callback) {
         var element = document.querySelector(selector);
         if (element)
@@ -36,8 +38,12 @@ var cherry = $c = {
                 this.canvas.height = options.height;
                 //element.style.height = options.height + "px";
             }
+            var canvas = this;
             /* return object*/
-            return callback(this);
+            setInterval(function(){ 
+                canvas.canvas.clearRect(0,0, canvas.canvas.width, canvas.canvas.height )
+                return callback(canvas) 
+            }, 1000/25);
         } else {
             this.serviceError('el_not_exist');
         }

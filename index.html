@@ -43,10 +43,12 @@
 <script src="js/cherry.js"></script>
 <script>
     cherry.init('#canvas', {width:700, height:400} ,function($c){
-        $c.line([20,20],[[20,100],[50,50],[112, 0],[111,111]],{color:'#005999', width: '6',  lineJoin: 'round',lineCap: 'round'})
+        p($c.frame_count ++);
+        $c.line([20,20],[[20,100],[50,50],[112+ $c.frame_count, $c.frame_count],[111,111]],{color:'#005999', width: '6',  lineJoin: 'round',lineCap: 'round'})
                 .line([100,100], {color:'#FF5999'})
                 .line([100, 20], {color:'green'})
                 .line([20, 20], {color: 'orange'});
+        return $c;
     });
 </script>
 </body>
