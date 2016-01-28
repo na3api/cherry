@@ -96,3 +96,6 @@ h1{
 .buttons_block{
     text-align: center;
 }
+#canvas{
+    margin: 20px;
+}
