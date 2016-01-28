@@ -85,25 +85,23 @@ var cherry = $c = {
                         }
                         return true;
                     }
+                }else{
+                    animate($this);
                 }
             }
             
             /* return object*/
-            var lastTime,
-                    last_show = 0,
+            var     last_show = 0,
                     lastFrame,
                     per_min = 0;
             function animate($this) {
                 requestAnimFrame(function () {
-                    var now = Date.now();
+                    $this.lastTime = Date.now();
                     /*clear place*/
                     $this.canvas.clearRect(0, 0, $this.canvas.width, $this.canvas.height);
                     $this.frame_count++;
-                    lastTime = now;
-
-
-                    if (now > last_show + 1000) {
-                        last_show = now;
+                    if ($this.lastTime > last_show + 1000) {
+                        last_show = $this.lastTime;
                         per_min = $this.frame_count - lastFrame;
                         lastFrame = $this.frame_count;
                     }
@@ -281,17 +279,21 @@ var cherry = $c = {
             this.serviceError('image_not_found',{path:img});
         } else {
             if (options != undefined) {
-                if (options.length == 2) {
-                    this.canvas.drawImage(img, options[0], options[1]);
-                }
-                if (options.length == 4) {
-                    this.canvas.drawImage(img, options[0], options[1], options[2], options[3]);
-                }
-                if (options.length == 8) {
+                if (options[0] instanceof Object && options.length == 3) {
+                    cherry.canvas.drawImage(img, 
+                        options[2][0], options[2][1], 
+                        options[1][0], options[1][1],
+                        options[0][0], options[0][1], 
+                        options[1][0], options[1][1]);
 
-                    cherry.canvas.drawImage(img, options[0], options[1], options[2], options[3],
-                            options[4], options[5], options[6], options[7]);
-
+                }else{
+                    if (options.length == 2) {
+                        this.canvas.drawImage(img, options[0], options[1]);
+                    }
+                    if (options.length == 4) {
+                        this.canvas.drawImage(img, options[0], options[1], options[2], options[3]);
+                    }
+                    
                 }
             } else {
                 this.canvas.drawImage(img, 0, 0);

@@ -42,7 +42,7 @@
         </div>       
         <script src="js/cherry.js"></script>
         <script>
-            cherry.init('#canvas', {width: 700, height: 400, frame: false}, function ($c) {
+            cherry.init('#canvas', {width: 700, height: 400, frame: true}, function ($c) {
                 $c.game_area.show();
                 $c.game_menu.show($c.frame_count);
 
@@ -50,15 +50,44 @@
                  .line([100,100], {color:'#FF5999'})
                  .line([100, 30], {color:'green'})
                  .line([40, 50], {color: 'orange'});*/
-                p($c.images)
-                $c.image($c.images.naruto_sprite2, [25, 25, 100, 150, 40, 190, 170, 110]);  
-                $c.image($c.images.naruto_sprite, [250, 25, 50, 50, 30, 30, 170, 110]);  
-        
+                //p($c.images
+                //$c.image($c.images.naruto_sprite, [70, 119, 28, 39, 30, 150, 28, 39]);  
+                $c.player.show();
                 return $c;
             }, {
                 resources: {
-                    naruto_sprite2: 'file:///home/nazar/NetBeansProjects/cherry/images/sprites/naruto_sheet_3.gif',
-                    naruto_sprite: 'file:///home/nazar/NetBeansProjects/cherry/images/sprites/NArutoSprites.png'
+                    naruto_sprite: 'file:///C:/Users/Фокстрот/Documents/NetBeansProjects/cherry/images/sprites/NArutoSprites.png',
+                    naruto_sprite3: 'file:///C:/Users/Фокстрот/Documents/NetBeansProjects/cherry/images/sprites/NArutoSprites3.png'
+                },
+                player:{
+                    state: 0,
+                    last_change: 0, 
+                    progress: 1, 
+                    pos:[30, 150],
+                    size:[37, 53],
+                    animation: [
+                        [17, 20],
+                        [65, 20],
+                        [114, 20],
+                        [164, 20],
+                    ],
+                    show: function(){
+                        if($c.lastTime - this.last_change > 200){
+                            this.last_change = $c.lastTime;
+                            this.state = this.state + this.progress;
+                            if(this.animation[this.state] == undefined)
+                            {
+                                if(this.progress > 0)
+                                    this.progress = -1;
+                                else
+                                    this.progress = 1;
+                                
+                                this.state = this.state + this.progress + this.progress;
+                            }
+                            
+                        }
+                        $c.image($c.images.naruto_sprite3, [this.pos, this.size, this.animation[this.state]]);
+                    }
                 },
                 game_area: {
                     place: {x1: 20, y1: 20, x2: 500, y2: 350},
