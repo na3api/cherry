@@ -26,6 +26,13 @@ $.serviceOptions = {
         must_be_string: 'This parameter have to be string',
         image_not_found: 'Image {path} not found'
     },
+    keys: {
+        32: 'SPACE',
+        37: 'LEFT',
+        38: 'UP',
+        39: 'RIGHT',
+        40: 'DOWN'
+    },
     validPrevImgClass: 'valid_prev_img',
     elementAttribute: {min: 'data-min', max: 'data-max', in: 'data-in', ajax: 'data-ajax', file: 'data-file'},
 }
@@ -38,6 +45,7 @@ var cherry = $c = {
     frame_count: 0,
     per_min: 0,
     lastTime: false,
+    listeners: {},
     init: function (selector, options, callback, game) {
         var element = document.querySelector(selector),
                 $this = this;
@@ -60,38 +68,39 @@ var cherry = $c = {
             //
             if (typeof game == 'object') {
                 $this.__proto__ = game;
-                if (game.resources != undefined && game.resources instanceof Object) {
-                    for (var i in game.resources) {
-                        _load(i, game.resources[i]);
-                    }
-                    function _load(url, path) {
-                        if ($this.images[url]) {
-                            return $this.images[url];
-                        } else {
-                            var img = new Image();
-                            img.src = path;
-                            img.onload = function () {
-                                $this.images[url] = img;
-                                if(ready())
-                                    animate($this) 
-                            };
-                            $this.images[url] = false;
-                        }
-                    }
-                    function ready(){
-                        for (var i in game.resources) {
-                            if(!$this.images[i])
-                                return false;
-                        }
-                        return true;
-                    }
-                }else{
-                    animate($this);
-                }
+                $this.controll($this);
             }
-            
+            if (options.resources != undefined && options.resources instanceof Object) {
+                for (var i in options.resources) {
+                    _load(i, options.resources[i]);
+                }
+                function _load(url, path) {
+                    if ($this.images[url]) {
+                        return $this.images[url];
+                    } else {
+                        var img = new Image();
+                        img.src = path;
+                        img.onload = function () {
+                            $this.images[url] = img;
+                            if (ready())
+                                animate($this)
+                        };
+                        $this.images[url] = false;
+                    }
+                }
+                function ready() {
+                    for (var i in options.resources) {
+                        if (!$this.images[i])
+                            return false;
+                    }
+                    return true;
+                }
+            } else {
+                animate($this);
+            }
+
             /* return object*/
-            var     last_show = 0,
+            var last_show = 0,
                     lastFrame,
                     per_min = 0;
             function animate($this) {
@@ -212,6 +221,9 @@ var cherry = $c = {
             if (options.background != undefined) {
                 this.canvas.fillStyle = options.background;
                 this.canvas.fill();
+            } else if (options.pattern != undefined && options.pattern instanceof Object) {
+                this.canvas.fillStyle = this.pattern(options.pattern.img, options.pattern.type);
+                this.canvas.fill();
             }
             if (options.width != undefined)
                 this.canvas.lineWidth = options.width;
@@ -228,6 +240,12 @@ var cherry = $c = {
                 return cherry.rect(x1, y1, x2, y2, options);
             }
         }
+    },
+    pattern: function (img, type) {
+        if (type == undefined)
+            var type = 'repeat';
+
+        return $c.canvas.createPattern(img, type);
     },
     /* TEXT */
     text: function (string, options) {
@@ -276,24 +294,24 @@ var cherry = $c = {
     /* DRAW IMAGE */
     image: function (img, options) {
         if (typeof img != 'object') {
-            this.serviceError('image_not_found',{path:img});
+            this.serviceError('image_not_found', {path: img});
         } else {
             if (options != undefined) {
                 if (options[0] instanceof Object && options.length == 3) {
-                    cherry.canvas.drawImage(img, 
-                        options[2][0], options[2][1], 
-                        options[1][0], options[1][1],
-                        options[0][0], options[0][1], 
-                        options[1][0], options[1][1]);
+                    cherry.canvas.drawImage(img,
+                            options[2][0], options[2][1],
+                            options[1][0], options[1][1],
+                            options[0][0], options[0][1],
+                            options[1][0], options[1][1]);
 
-                }else{
+                } else {
                     if (options.length == 2) {
                         this.canvas.drawImage(img, options[0], options[1]);
                     }
                     if (options.length == 4) {
                         this.canvas.drawImage(img, options[0], options[1], options[2], options[3]);
                     }
-                    
+
                 }
             } else {
                 this.canvas.drawImage(img, 0, 0);
@@ -313,6 +331,54 @@ var cherry = $c = {
             this.canvas[i] = condition[i];
         }
     },
+    controll: function ($this) {
+        this.pressedKeys = {};
+
+        function setKey(event, status) {
+            var code = event.keyCode;
+            var key;
+
+            switch (code) {
+                case 32:
+                    key = 'SPACE';
+                    break;
+                case 37:
+                    key = 'LEFT';
+                    break;
+                case 38:
+                    key = 'UP';
+                    break;
+                case 39:
+                    key = 'RIGHT';
+                    break;
+                case 40:
+                    key = 'DOWN';
+                    break;
+                default:
+                    key = String.fromCharCode(code);
+            }
+
+            $this.pressedKeys[key] = status;
+        }
+
+        document.addEventListener('keydown', function (e) {
+            setKey(e, true);
+        });
+
+        document.addEventListener('keyup', function (e) {
+            setKey(e, false);
+        });
+
+        window.addEventListener('blur', function () {
+            $this.pressedKeys = {};
+        });
+
+        window.input = {
+            isDown: function (key) {
+                return $this.pressedKeys[key.toUpperCase()];
+            }
+        };
+    },
     /**************************************************************************
      ********************SERVICE ERROR***************************************** 
      **************************************************************************/
@@ -321,9 +387,9 @@ var cherry = $c = {
         if ($.serviceOptions.criticalError[key] != undefined)
         {
             var mess = 'Error:: ' + $.serviceOptions.criticalError[key] + '!!!';
-            if(replaces instanceof Object){
-                for(var key in replaces){
-                    mess = mess.replace("{"+key+"}", replaces[key]);
+            if (replaces instanceof Object) {
+                for (var key in replaces) {
+                    mess = mess.replace("{" + key + "}", replaces[key]);
                 }
             }
             this.service_errors.push(mess)
