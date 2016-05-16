@@ -41,6 +41,7 @@ var cherry = $c = {
         frame: true
     },
     images: {},
+    objects: {},
     canvas: false,
     frame_count: 0,
     per_min: 0,
@@ -52,7 +53,6 @@ var cherry = $c = {
         if (element)
         {
             $this.canvas = element.getContext('2d');
-
             /* set options */
             if (options.width !== undefined) {
                 $this.canvas.width = options.width;
@@ -77,20 +77,36 @@ var cherry = $c = {
                 function _load(url, path) {
                     if ($this.images[url]) {
                         return $this.images[url];
-                    } else {
-                        var img = new Image();
-                        img.src = path;
-                        img.onload = function () {
-                            $this.images[url] = img;
-                            if (ready())
-                                animate($this)
-                        };
-                        $this.images[url] = false;
+                    }else if($this.objects[url] ){
+                        return $this.objects[url];                       
+                    }else {
+                        if(path.search(/\.js/) >= 0 ){
+                            var x = document.createElement('script');
+                            x.src = path;
+                            document.getElementsByTagName("head")[0].appendChild(x);
+                            x.onload = function () {
+                                eval('$this.objects[url] = ' + url);
+                                if (ready())
+                                    animate($this)
+                            };                  
+                            $this.objects[url] = false;
+                            
+                        }else{
+                            var img = new Image();
+                            img.src = path;
+                            img.onload = function () {
+                                $this.images[url] = img;
+                                if (ready())
+                                    animate($this)
+                            };
+                            $this.images[url] = false;
+                            
+                        }
                     }
                 }
                 function ready() {
                     for (var i in options.resources) {
-                        if (!$this.images[i])
+                        if (!$this.images[i] && !$this.objects[i])
                             return false;
                     }
                     return true;
@@ -292,17 +308,26 @@ var cherry = $c = {
 
     },
     /* DRAW IMAGE */
-    image: function (img, options) {
+    image: function (img, options, flip) {
         if (typeof img != 'object') {
             this.serviceError('image_not_found', {path: img});
         } else {
             if (options != undefined) {
                 if (options[0] instanceof Object && options.length == 3) {
+                    cherry.canvas.save();
+                    if(flip == 1){
+                        flipAxis = options[0][0] + Math.round(options[1][0] / 2)
+                        cherry.canvas.translate(flipAxis, 0);
+                        cherry.canvas.scale(-1, 1);
+                        cherry.canvas.translate(-flipAxis, 0);
+                    }
                     cherry.canvas.drawImage(img,
                             options[2][0], options[2][1],
                             options[1][0], options[1][1],
                             options[0][0], options[0][1],
-                            options[1][0], options[1][1]);
+                            options[1][0], options[1][1]);  
+                        
+                    cherry.canvas.restore();
 
                 } else {
                     if (options.length == 2) {
@@ -318,7 +343,7 @@ var cherry = $c = {
             }
 
         }
-
+        
         return {
             image: function (options) {
                 return cherry.image(img, options);
@@ -360,11 +385,9 @@ var cherry = $c = {
 
             $this.pressedKeys[key] = status;
         }
-
         document.addEventListener('keydown', function (e) {
             setKey(e, true);
         });
-
         document.addEventListener('keyup', function (e) {
             setKey(e, false);
         });
@@ -404,4 +427,21 @@ var p = function () {
     if (is_debug) {
         console.log.apply(console, arguments);
     }
+}
+var delta = 90;
+var lastKeypressTime = 0;
+function KeyHandler(event)
+{
+   if ( String.fromCharCode(event.charCode).toUpperCase() == 'T' )
+   {
+      var thisKeypressTime = new Date();
+      if ( thisKeypressTime - lastKeypressTime <= delta )
+      {
+        doDoubleKeypress();
+        // optional - if we'd rather not detect a triple-press
+        // as a second double-press, reset the timestamp
+        thisKeypressTime = 0;
+      }
+      lastKeypressTime = thisKeypressTime;
+   }
 }
